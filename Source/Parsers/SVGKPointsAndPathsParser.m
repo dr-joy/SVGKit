@@ -314,6 +314,23 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
     return p;
 }
 
+/**
+ flag  (An elliptical arc argument may present 2 flags as 00)
+ ("0"|"1")
+ */
+
++ (BOOL) readFlag:(NSScanner*)scanner
+{
+    if ([scanner scanString:@"0" intoString:NULL]) {
+        return FALSE;
+    }
+    if ([scanner scanString:@"1" intoString:NULL]) {
+        return TRUE;
+    }
+    NSAssert(FALSE, @"invalid flag value");
+    return FALSE;
+}
+
 + (void) readCoordinate:(NSScanner*)scanner intoFloat:(CGFloat*) floatPointer
 {
 #if CGFLOAT_IS_DOUBLE
@@ -660,18 +677,31 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
  coordinate
  | coordinate comma-wsp? vertical-lineto-argument-sequence
  */
-+ (SVGCurve) readVerticalLinetoArgumentSequence:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin
++ (SVGCurve) readVerticalLinetoArgumentSequence:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin isRelative:(BOOL) isRelative
 {
-	// FIXME: reduce the allocations here; make one CGPoint and update it, not multiple
+    // FIXME: reduce the allocations here; make one CGPoint and update it, not multiple
     CGFloat yValue;
-	[SVGKPointsAndPathsParser readCoordinate:scanner intoFloat:&yValue];
+    [SVGKPointsAndPathsParser readCoordinate:scanner intoFloat:&yValue];
     CGPoint vertCoord = CGPointMake(origin.x, origin.y+yValue);
     CGPoint currentPoint = CGPathGetCurrentPoint(path);
     CGPoint coord = CGPointMake(currentPoint.x, currentPoint.y+(vertCoord.y-currentPoint.y));
-    CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
 #if DEBUG_PATH_CREATION
-	SVGKitLogWarn(@"[%@] PATH: VERTICAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
+    SVGKitLogWarn(@"[%@] PATH: VERTICAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
 #endif
+    CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
+
+    while (![scanner isAtEnd]) {
+        origin = isRelative ? coord : origin;
+        [SVGKPointsAndPathsParser readCoordinate:scanner intoFloat:&yValue];
+        vertCoord = CGPointMake(origin.x, origin.y+yValue);
+        currentPoint = CGPathGetCurrentPoint(path);
+        coord = CGPointMake(currentPoint.x, currentPoint.y+(vertCoord.y-currentPoint.y));
+    #if DEBUG_PATH_CREATION
+        SVGKitLogWarn(@"[%@] PATH: VERTICAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
+    #endif
+        CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
+    }
+
     return SVGCurveMakePoint(coord);
 }
 
@@ -679,7 +709,7 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
  vertical-lineto:
  ( "V" | "v" ) wsp* vertical-lineto-argument-sequence
  */
-+ (SVGCurve) readVerticalLinetoCommand:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin
++ (SVGCurve) readVerticalLinetoCommand:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin isRelative:(BOOL) isRelative
 {
 #if VERBOSE_PARSE_SVG_COMMAND_STRINGS
 	SVGKitLogVerbose(@"Parsing command string: vertical-line-to command");
@@ -693,7 +723,7 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
 	
     [SVGKPointsAndPathsParser readWhitespace:scanner];
     
-    return [SVGKPointsAndPathsParser readVerticalLinetoArgumentSequence:scanner path:path relativeTo:origin];
+    return [SVGKPointsAndPathsParser readVerticalLinetoArgumentSequence:scanner path:path relativeTo:origin isRelative:isRelative];
 }
 
 /**
@@ -701,19 +731,31 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
  coordinate
  | coordinate comma-wsp? horizontal-lineto-argument-sequence
  */
-+ (SVGCurve) readHorizontalLinetoArgumentSequence:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin
++ (SVGCurve) readHorizontalLinetoArgumentSequence:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin isRelative:(BOOL) isRelative
 {
 	// FIXME: reduce the allocations here; make one CGPoint and update it, not multiple
-	
     CGFloat xValue;
 	[SVGKPointsAndPathsParser readCoordinate:scanner intoFloat:&xValue];
     CGPoint horizCoord = CGPointMake(origin.x+xValue, origin.y);
     CGPoint currentPoint = CGPathGetCurrentPoint(path);
     CGPoint coord = CGPointMake(currentPoint.x+(horizCoord.x-currentPoint.x), currentPoint.y);
-    CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
 #if DEBUG_PATH_CREATION
-	SVGKitLogWarn(@"[%@] PATH: HORIZONTAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
+    SVGKitLogWarn(@"[%@] PATH: HORIZONTAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
 #endif
+    CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
+
+    while (![scanner isAtEnd]) {
+        origin = isRelative ? coord : origin;
+        [SVGKPointsAndPathsParser readCoordinate:scanner intoFloat:&xValue];
+        horizCoord = CGPointMake(origin.x+xValue, origin.y);
+        currentPoint = CGPathGetCurrentPoint(path);
+        coord = CGPointMake(currentPoint.x+(horizCoord.x-currentPoint.x), currentPoint.y);
+    #if DEBUG_PATH_CREATION
+        SVGKitLogWarn(@"[%@] PATH: HORIZONTAL LINE to (%2.2f, %2.2f)", [SVGKPointsAndPathsParser class], coord.x, coord.y );
+    #endif
+        CGPathAddLineToPoint(path, NULL, coord.x, coord.y);
+    }
+
     return SVGCurveMakePoint(coord);
 }
 
@@ -721,7 +763,7 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
  horizontal-lineto:
  ( "H" | "h" ) wsp* horizontal-lineto-argument-sequence
  */
-+ (SVGCurve) readHorizontalLinetoCommand:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin
++ (SVGCurve) readHorizontalLinetoCommand:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin isRelative:(BOOL) isRelative
 {
 #if VERBOSE_PARSE_SVG_COMMAND_STRINGS
 	SVGKitLogVerbose(@"Parsing command string: horizontal-line-to command");
@@ -737,7 +779,7 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
 	
     [SVGKPointsAndPathsParser readWhitespace:scanner];
     
-    return [SVGKPointsAndPathsParser readHorizontalLinetoArgumentSequence:scanner path:path relativeTo:origin];
+    return [SVGKPointsAndPathsParser readHorizontalLinetoArgumentSequence:scanner path:path relativeTo:origin isRelative:isRelative];
 }
 
 + (SVGCurve) readCloseCommand:(NSScanner*)scanner path:(CGMutablePathRef)path relativeTo:(CGPoint)origin
@@ -806,11 +848,12 @@ static inline CGPoint SVGCurveReflectedControlPoint(SVGCurve prevCurve)
 	phi = fmod(phi, 2 * M_PI);
     
     [SVGKPointsAndPathsParser readCommaAndWhitespace:scanner];
-	
-	CGPoint flags = [SVGKPointsAndPathsParser readCoordinatePair:scanner];
-	
-	BOOL largeArcFlag = flags.x != 0.;
-	BOOL sweepFlag = flags.y != 0.;
+
+    BOOL largeArcFlag = [SVGKPointsAndPathsParser readFlag:scanner];
+
+    [SVGKPointsAndPathsParser readCommaAndWhitespace:scanner];
+
+    BOOL sweepFlag = [SVGKPointsAndPathsParser readFlag:scanner];
     
     [SVGKPointsAndPathsParser readCommaAndWhitespace:scanner];
     
