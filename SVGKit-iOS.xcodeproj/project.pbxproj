@@ -11,7 +11,6 @@
 		036A524C16E87693008C1140 /* NSCharacterSet+SVGKExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 036A524A16E87693008C1140 /* NSCharacterSet+SVGKExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		036A524D16E87693008C1140 /* NSCharacterSet+SVGKExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = 036A524B16E87693008C1140 /* NSCharacterSet+SVGKExtensions.m */; };
 		31AD5E962B31832C00C3D73D /* CocoaLumberjack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 31AD5E952B31832C00C3D73D /* CocoaLumberjack.xcframework */; };
-		31AD5E972B31832C00C3D73D /* CocoaLumberjack.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 31AD5E952B31832C00C3D73D /* CocoaLumberjack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		321EAA6A2171ECDE00640504 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 321EAA542171E72900640504 /* libxml2.tbd */; };
 		321EAA6B2171ECE200640504 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321EAA582171E73800640504 /* Foundation.framework */; };
 		321EAA6C2171ECE700640504 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321EAA562171E73100640504 /* CoreGraphics.framework */; };
@@ -1013,17 +1012,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		31AD5E982B31832D00C3D73D /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				31AD5E972B31832C00C3D73D /* CocoaLumberjack.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		6639618C16145D0400E58CCA /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2621,7 +2609,6 @@
 				825CDAAB1BDA4BC0003C1C12 /* Frameworks */,
 				825CDAAC1BDA4BC0003C1C12 /* Headers */,
 				825CDAAD1BDA4BC0003C1C12 /* Resources */,
-				31AD5E982B31832D00C3D73D /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
