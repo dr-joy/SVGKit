@@ -19,7 +19,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", .upToNextMajor(from: "3.7.0"))
+        .package(url: "https://github.com/dr-joy/CocoaLumberjack", branch: "drjoy-3.6.2")
     ],
     targets: [
         .target(
