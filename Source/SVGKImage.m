@@ -341,7 +341,9 @@ static NSMutableDictionary *globalSVGKImageCache;
   /** Remove and release (if appropriate) all cached render-output */
   SVGKitLogVerbose(@"[%@] source data changed; de-caching cached data",
                    [self class]);
-  self.CALayerTree = nil;
+  @synchronized(self) {
+    self.CALayerTree = nil;
+  }
 }
 
 /**
@@ -561,7 +563,9 @@ static NSMutableDictionary *globalSVGKImageCache;
           .height); // implicitly resizes all the internal rendering of the SVG
 
   /** invalidate all cached data that's dependent upon SVG's size */
-  self.CALayerTree = nil; // invalidate the cached copy
+  @synchronized(self) {
+    self.CALayerTree = nil; // invalidate the cached copy
+  }
 }
 
 - (void)setScale:(CGFloat)newScale {
@@ -578,7 +582,9 @@ static NSMutableDictionary *globalSVGKImageCache;
   _scale = newScale;
 
   /** invalidate all cached data that's dependent upon SVG's size */
-  self.CALayerTree = nil; // invalidate the cached copy
+  @synchronized(self) {
+    self.CALayerTree = nil; // invalidate the cached copy
+  }
 }
 
 - (UIImage *)UIImage {
@@ -968,23 +974,25 @@ static NSMutableDictionary *globalSVGKImageCache;
 }
 
 - (CALayer *)CALayerTree {
-  if (CALayerTree == nil) {
-    SVGKitLogInfo(@"[%@] WARNING: no CALayer tree found, creating a new one "
-                  @"(will cache it once generated)",
-                  [self class]);
+  @synchronized(self) {
+    if (CALayerTree == nil) {
+      SVGKitLogInfo(@"[%@] WARNING: no CALayer tree found, creating a new one "
+                    @"(will cache it once generated)",
+                    [self class]);
 
-    NSDate *startTime = [NSDate date];
-    self.CALayerTree = [self newCALayerTree];
+      NSDate *startTime = [NSDate date];
+      self.CALayerTree = [self newCALayerTree];
 
-    SVGKitLogInfo(@"[%@] ...time taken to convert from DOM to fresh CALayers: "
-                  @"%2.3f seconds)",
-                  [self class], -1.0f * [startTime timeIntervalSinceNow]);
-  } else
-    SVGKitLogVerbose(
-        @"[%@] fetching CALayerTree: re-using cached CALayers (FREE))",
-        [self class]);
+      SVGKitLogInfo(@"[%@] ...time taken to convert from DOM to fresh CALayers: "
+                    @"%2.3f seconds)",
+                    [self class], -1.0f * [startTime timeIntervalSinceNow]);
+    } else
+      SVGKitLogVerbose(
+          @"[%@] fetching CALayerTree: re-using cached CALayers (FREE))",
+          [self class]);
 
-  return CALayerTree;
+    return CALayerTree;
+  }
 }
 
 - (void)addSVGLayerTree:(CALayer *)layer

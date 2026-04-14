@@ -32,7 +32,10 @@
 
 - (void)renderInContext:(CGContextRef)ctx
 {
-	[self.CALayerTree renderInContext:ctx];
+	CALayer *layerTree = self.CALayerTree;
+	if (layerTree) {
+		[layerTree renderInContext:ctx];
+	}
 }
 
 /**
